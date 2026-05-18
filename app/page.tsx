@@ -232,19 +232,29 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    let cancelled = false;
 
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as PlannerItem[];
-        setItems(parsed);
-        setSelectedId(parsed[0]?.id ?? "");
-      } catch {
-        setItems(seedItems);
+    window.queueMicrotask(() => {
+      if (cancelled) return;
+
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as PlannerItem[];
+          setItems(parsed);
+          setSelectedId(parsed[0]?.id ?? "");
+        } catch {
+          setItems(seedItems);
+        }
       }
-    }
 
-    setMounted(true);
+      setMounted(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
